@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<style>
+    *{
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        position: relative;
+    }
+
+    .flex{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    body{
+        width: 100vw;
+        height: 100vh;
+        background: #000000;
+        color: #636B53;
+        font-family: sans-serif;
+        text-align: center;
+    }
+    .page {
+        width: 480px;
+        height: 800px;
+        background: #fff;
+    }
+    .logo{
+       
+        display: block;
+        margin: auto;
+        margin-top: 60%;
+        overflow: hidden;
+
+        animation-name: scale; 
+        animation-duration: 1s;
+        animation-timing-function: ease-out;     
+    }
+
+
+    @keyframes scale {
+         0% {
+             transform: scaleY(0);
+            
+        }
+         100% {
+             transform: scaleY(1);
+             
+        }
+    }
+</style>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragonfly</title>
+</head>
+
+<body class="flex">
+    <div class="page">
+        <img class="logo" alt="animation" src="manitou.png">
+    </div>     
+</body>
+
+<script>
+    setTimeout(() => {
+        window.location.href="2.Password.html";   
+        }, 3000);
+</script>
+
+
+</html>

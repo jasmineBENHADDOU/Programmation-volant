@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .flex {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: #000000;
+      color: #636b53;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    .page {
+      width: 480px;
+      height: 800px;
+      background: #fff;
+    }
+
+    .fill-meter {
+      width: 480px;
+      height: 800px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background-color: #8d9876;
+      transition: height 1.5s ease-out;
+    }
+    .button {
+      display: flex;
+      border: none;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #636b53;
+      margin: auto;
+      background: #fff;
+      margin-top: 30%;
+      overflow: hidden;
+    }
+    .page .button:active {
+      transform: scale(0.9);
+    }
+
+    .page .instructions {
+      color: #355d3e;
+      text-align: center;
+      padding: 20px;
+      font-size: 2em;
+      margin-top: 150px;
+      z-index: +3;
+    }
+  </style>
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dragonfly</title>
+  </head>
+
+  <body class="flex">
+    <div class="page">
+      <div class="fill-meter"></div>
+
+      <button class="button">
+        <img src="start.png" />
+      </button>
+
+      <div class="instructions">
+        <h2>Hold to</h2>
+        <h2>Start Engine</h2>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    const btn = document.querySelectorAll("button");
+    const fillMeter = document.querySelector(".fill-meter");
+
+    const buttonElement = btn[0];
+
+    let fillInterval;
+    const FILL_RATE_MS = 10;
+    const FILL_SPEED = 0.5;
+    const MAX_HEIGHT = 100;
+    let currentHeight = 0;
+
+    const startFill = () => {
+      fillMeter.style.transition = "height 0.01s linear";
+
+      fillInterval = setInterval(() => {
+        currentHeight += FILL_SPEED;
+        fillMeter.style.height = currentHeight + "%";
+
+        if (currentHeight >= MAX_HEIGHT) {
+          clearInterval(fillInterval);
+          fillMeter.style.height = MAX_HEIGHT + "%";
+          // window.location.href = "next_page.html";
+        }
+      }, FILL_RATE_MS);
+    };
+
+    const stopFill = () => {
+      clearInterval(fillInterval);
+
+      if (currentHeight < MAX_HEIGHT) {
+        fillMeter.style.transition = "height 1.5s ease-out";
+        fillMeter.style.height = "0%";
+        currentHeight = 0;
+      }
+    };
+
+    buttonElement.addEventListener("mousedown", startFill);
+
+    document.addEventListener("mouseup", stopFill);
+
+    buttonElement.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      startFill();
+    });
+    document.addEventListener("touchend", stopFill);
+  </script>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name ="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>page selection voiture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+        body {
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            color: #636B53;
+            font-family: sans-serif;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+        }
+        .titre h2 {
+            
+
+            font-size: 40px;
+            text-align: center;
+            margin: 30px 0; 
+        }
+
+        .page{
+            width: 480px;
+            height: 800px;
+            background: #fff;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            gap: 20px; /* espace entre les boutons */
+            
+
+        }
+
+        .page .b1 {
+             width: 460px; /* Largeur fixe du bouton */
+             height: 120px;
+             align-items: center;
+             background: rgb(255, 255, 255);
+             border: none;
+             border-radius: 1rem;
+             cursor: pointer;
+             display: flex;
+             overflow: hidden;
+             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);        
+        }
+              .page .b2 {
+             width: 460px; /* Largeur fixe du bouton */
+             height: 120px;
+             align-items: center;
+             background: rgb(255, 255, 255);
+             border: none;
+             border-radius: 1rem;
+             cursor: pointer;
+             display: flex;
+             overflow: hidden;
+             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);        
+        }
+              .page .b3 {
+             width: 460px; /* Largeur fixe du bouton */
+             height: 120px;
+             align-items: center;
+             background: rgb(255, 255, 255);
+             border: none;
+             border-radius: 1rem;
+             cursor: pointer;
+             display: flex;
+             overflow: hidden;
+             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);        
+        }
+              .page .b4 {
+             width: 460px; /* Largeur fixe du bouton */
+             height: 120px;
+             align-items: center;
+             background: rgb(255, 255, 255);
+             border: none;
+             border-radius: 1rem;
+             cursor: pointer;
+             display: flex;
+             overflow: hidden;
+             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);        
+        }
+        .page .b1:active{
+            transition: all 0.4s ease;
+            box-shadow: 0 20px 40px rgba(49, 185, 45, 0.15);
+            transform: scale(0.9);
+        }
+        .page .b2:active{
+            transition: all 0.4s ease;
+            box-shadow: 0 20px 40px rgba(49, 185, 45, 0.15);
+            transform: scale(0.9);
+        }
+        .page .b3:active{
+            transition: all 0.4s ease;
+            box-shadow: 0 20px 40px rgba(49, 185, 45, 0.15);
+            transform: scale(0.9);
+        }
+        .page .b4:active{
+            transition: all 0.4s ease;
+            box-shadow: 0 20px 40px rgba(49, 185, 45, 0.15);
+            transform: scale(0.9);
+        }
+
+       
+        
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <div class="titre">
+            <h2>Select a vehicule</h2>
+        </div>
+        <button class="b1" data-button="1">
+            <img src="MT 625e.png" alt="Option 1" />
+        </button>
+        <button class="b2" data-button="2">
+            <img src="MT 1440.png" alt="Option 2" />
+        </button>
+        <button class="b3" data-button="3">
+            <img src="MT 1335.png" alt="Option 3" />
+        </button>
+        <button class="b4" data-button="4">
+            <img src="MT 625e.png" alt="Option 4" />
+        </button>    
+    </div>
+</body>
+
+<script>
+    document.querySelectorAll('.b1, .b2, .b3, .b4').forEach(button => {
+        button.addEventListener('click', function() {
+            const buttonNumber = this.getAttribute('data-button');
+            window.location.href = "5.Loading.html"; 
+        });
+    });
+</script>
+
+</html>

@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .flex {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: #000000;
+      color: #636b53;
+      font-family: sans-serif;
+    }
+
+    .page {
+      width: 480px;
+      height: 800px;
+      background: #fff;
+    }
+
+    .fill-meter {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background-color: #e74c3c; /* rouge pour OFF */
+      transition: height 1.5s ease-out;
+    }
+
+    .button {
+      display: flex;
+      border: none;
+      border-radius: 50%;
+      box-shadow: 0 0 15px #e74c3c;
+      margin: auto;
+      background: #fff;
+      margin-top: 30%;
+      overflow: hidden;
+    }
+
+    .button img {
+      width: 80px;
+      height: auto;
+      display: block;
+    }
+
+    .button:active {
+      transform: scale(0.9);
+    }
+
+    .instructions {
+      color: #e74c3c;
+      text-align: center;
+      padding: 20px;
+      font-size: 2em;
+      margin-top: 150px;
+    }
+  </style>
+
+  <head>
+    <meta charset="UTF-8" />
+    <title>Power Off</title>
+  </head>
+
+  <body class="flex">
+    <div class="page">
+      <div class="fill-meter"></div>
+
+      <button class="button">
+        <img src="power-icon.jpg" />
+      </button>
+
+      <div class="instructions">
+        <h2>Hold to</h2>
+        <h2>Shutdown System</h2>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    const fillMeter = document.querySelector(".fill-meter");
+    const button = document.querySelector(".button");
+
+    let fillInterval;
+    let currentHeight = 0;
+
+    const FILL_RATE_MS = 10;
+    const FILL_SPEED = 0.5;
+    const MAX_HEIGHT = 100;
+
+    //  WebSocket vers le Raspberry
+    const socket = new WebSocket("ws://localhost:8765");
+
+    socket.onopen = () => {
+      console.log("Connecté au Raspberry");
+    };
+
+    const startFill = () => {
+      fillMeter.style.transition = "height 0.01s linear";
+
+      fillInterval = setInterval(() => {
+        currentHeight += FILL_SPEED;
+        fillMeter.style.height = currentHeight + "%";
+
+        if (currentHeight >= MAX_HEIGHT) {
+          clearInterval(fillInterval);
+
+          // ENVOI DE LA COMMANDE POWER OFF
+          socket.send("poweroff");
+
+          alert("Arrêt du système...");
+        }
+      }, FILL_RATE_MS);
+    };
+
+    const stopFill = () => {
+      clearInterval(fillInterval);
+
+      if (currentHeight < MAX_HEIGHT) {
+        fillMeter.style.transition = "height 1.5s ease-out";
+        fillMeter.style.height = "0%";
+        currentHeight = 0;
+      }
+    };
+
+    // Events souris
+    button.addEventListener("mousedown", startFill);
+    document.addEventListener("mouseup", stopFill);
+
+    // Events tactile
+    button.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      startFill();
+    });
+    document.addEventListener("touchend", stopFill);
+  </script>
+</html>

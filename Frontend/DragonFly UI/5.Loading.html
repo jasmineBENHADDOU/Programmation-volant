@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>  
+    <meta charset="UTF-8">
+    <title>Loading</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            color: #636B53;
+            font-family: sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .page {
+            width: 480px;
+            height: 800px;
+            background: #fff;
+            display: flex;
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+        }
+        .logo{
+            transform: scale(0.85);     
+        }
+        
+        .spinner-wrapper {
+            margin: 65%;
+            position: relative;
+            width: 40px;
+            height: 40px;
+        }
+
+        .spinner-wrapper span {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #636B53;
+            border-radius: 50%;
+            transform: rotate(calc(var(--i) * (360deg / 11))) translateY(40px);
+            animation: animateDots 1.4s linear infinite;
+            animation-delay: calc(var(--i) * 0.12s);
+            opacity: 0;
+        }
+
+
+        @keyframes animateDots {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page">
+        <img class="logo" src="manitou.png">
+       
+
+        <div class="spinner-wrapper">
+            <span style="--i:1;"></span>
+            <span style="--i:2;"></span>
+            <span style="--i:3;"></span>
+            <span style="--i:4;"></span>
+            <span style="--i:5;"></span>
+            <span style="--i:6;"></span>
+            <span style="--i:7;"></span>
+            <span style="--i:8;"></span>
+            <span style="--i:9;"></span>
+            <span style="--i:10;"></span>
+            <span style="--i:11;"></span>
+        </div>
+
+    </div>
+</body>
+
+<script>
+    setTimeout(() => {
+        window.location.href="7.StartVehicule.html";   
+    }, 8000);
+</script>
+
+
+
+</html>
