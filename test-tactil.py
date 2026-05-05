@@ -1,17 +1,15 @@
 from gpiozero import Button
 from signal import pause
 
-# OUT du TTP223 connecté au GPIO17
-touch_sensor = Button(17, pull_up=False)
+hall = Button(17, pull_up=True)
 
-def pressed():
-    print("Capteur TTP223 touché")
+def detected():
+    print("1")
 
-def released():
-    print("Capteur TTP223 relâché")
+def removed():
+    print("0")
 
-touch_sensor.when_pressed = pressed
-touch_sensor.when_released = released
+hall.when_pressed = detected
+hall.when_released = removed
 
-print("Test TTP223 en cours...")
 pause()
