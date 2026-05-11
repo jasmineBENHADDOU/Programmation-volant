@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Distance</title>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        position: relative;
+        font-family: sans-serif;
+      }
+
+      body {
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .page {
+        width: 480px;
+        height: 800px;
+        background: #f7f7f7;
+        border: 2px solid #d9d9d9;
+        overflow: hidden;
+      }
+
+      .light-button {
+        position: absolute;
+        background: transparent;
+        width: 203px;
+        height: 203px;
+
+        top: 56px;
+        left: 137px;
+
+        border: none;
+        outline: none;
+        background: none;
+
+        padding: 0;
+        margin: 0;
+
+        appearance: none;
+        -webkit-appearance: none;
+
+        cursor: pointer;
+      }
+      .light-button:focus {
+        outline: none;
+      }
+
+      .light-button:focus-visible {
+        outline: none;
+      }
+      .light-button img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+      }
+
+      .distance-container {
+        position: absolute;
+        bottom: 150px;
+        width: 100%;
+        text-align: center;
+      }
+
+      .distance {
+        font-family: "Agdasima";
+        font-size: 128px;
+        font-weight: 700;
+        color: #5b6950;
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .meter {
+        font-family: "Agdasima";
+        font-size: 128px;
+        font-weight: 700;
+        color: #5b6950;
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .status {
+        position: absolute;
+        bottom: 100px;
+        width: 100%;
+        text-align: center;
+        color: #355d3e;
+        font-size: 32px;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page">
+      <button class="light-button" id="lightBtn" aria-label="Phares">
+        <img src="gyrophare.png" alt="phare" />
+      </button>
+
+      <div class="distance-container">
+        <span class="distance" id="distanceValue">10</span>
+        <span class="meter">m</span>
+      </div>
+
+      <div class="status" id="statusText"></div>
+    </div>
+
+    <script>
+      //////////////////////////////////////////////////////
+      // DISTANCE (backend plus tard)
+      //////////////////////////////////////////////////////
+
+      let distance = 10;
+
+      function updateDistance(value) {
+        document.getElementById("distanceValue").innerText = value;
+      }
+
+      //////////////////////////////////////////////////////
+      // BOUTON PHARES
+      //////////////////////////////////////////////////////
+
+      let lightOn = false;
+
+      const btn = document.getElementById("lightBtn");
+      const statusText = document.getElementById("statusText");
+
+      btn.addEventListener("click", () => {
+        lightOn = !lightOn;
+
+        if (lightOn) {
+          statusText.innerText = "Phares ON";
+
+          //btn.style.boxShadow = "0 0 40px rgba(255,255,180,0.9)";
+
+          //////////////////////////////////////////////////
+          // ENVOI MESSAGE UNREAL
+          //////////////////////////////////////////////////
+
+          console.log("LIGHT_ON");
+
+          // websocket.send("LIGHT_ON");
+        } else {
+          statusText.innerText = "Phares OFF";
+
+          //btn.style.boxShadow = "0px 6px 14px rgba(0,0,0,0.12)";
+
+          // ENVOI MESSAGE UNREAL
+
+          console.log("LIGHT_OFF");
+
+          // websocket.send("LIGHT_OFF");
+        }
+      });
+
+      // TEST DISTANCE
+
+      setInterval(() => {
+        distance++;
+
+        if (distance > 25) distance = 3;
+
+        updateDistance(distance);
+      }, 2000);
+    </script>
+  </body>
+</html>
