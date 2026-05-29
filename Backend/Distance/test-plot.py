@@ -1,8 +1,10 @@
+#Test de visualisation en temps réel du spectre audio pour détecter un signal dans la plage 16-19 kHz
+
 import sounddevice as sd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# --- CONFIGURATION ---
+# --- CONFIGURATION --- 
 SAMPLE_RATE = 48000
 BLOCKSIZE = 2048
 DEVICE = None
@@ -34,7 +36,6 @@ prev_energy = 0.0
 prev_mag = np.zeros(len(x_freqs), dtype=float)
 
 print("=== DÉMARRAGE DE L'ÉCOUTE ===")
-print("Regarde à la fois le graphique et les chiffres ci-dessous :")
 
 try:
     with sd.InputStream(
