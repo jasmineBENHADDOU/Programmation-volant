@@ -3,15 +3,18 @@
 import sounddevice as sd
 import numpy as np
 import matplotlib.pyplot as plt
+import requests
+import time
 
 # --- CONFIGURATION --- 
 SAMPLE_RATE = 48000
 BLOCKSIZE = 2048
 DEVICE = None
-TARGET_MIN = 16000
-TARGET_MAX = 19000
-THRESHOLD = 50  # Baissé pour correspondre au format float32 standard
-SMOOTH_ALPHA = 0.3  # Coefficient d'EMA (0->pas de lissage, 1->pas d'historique)
+TARGET_MIN = 11000
+TARGET_MAX = 14000
+THRESHOLD = 1.0  # Baissé pour correspondre au format float32 standard
+SMOOTH_ALPHA = 0.5  # Coefficient d'EMA (0->pas de lissage, 1->pas d'historique)
+SOFTWARE_GAIN = 15.0 #amplificateur 
 
 # --- PRÉPARATION DU GRAPHIQUE ---
 plt.ion()  # Mode interactif
@@ -37,6 +40,10 @@ prev_mag = np.zeros(len(x_freqs), dtype=float)
 
 print("=== DÉMARRAGE DE L'ÉCOUTE ===")
 
+# Envoi vers l'API (throttlé pour ne pas spammer)
+SEND_INTERVAL = 0.1  # secondes
+last_send = 0.0
+
 try:
     with sd.InputStream(
         device=DEVICE,
@@ -56,6 +63,7 @@ try:
             audio_win = audio * window
             fft = np.fft.rfft(audio_win)
             mag = np.abs(fft)
+            mag = mag * SOFTWARE_GAIN 
 
             # 3. Mesure de l'énergie dans la zone cible
             zone = (x_freqs >= TARGET_MIN) & (x_freqs <= TARGET_MAX)
@@ -74,13 +82,24 @@ try:
             status = " [!!! ULTRASON DÉTECTÉ !!!]" if smoothed_energy > THRESHOLD else ""
             print(f"Énergie zone cible (lissée): {smoothed_energy:6.2f} | Max Total : {np.max(mag):6.2f}{status}")
 
+            # Envoi non bloquant (throttlé) vers l'API Flask/WebSocket
+            now = time.time()
+            if now - last_send >= SEND_INTERVAL:
+                payload = {"energy": float(smoothed_energy), "detected": bool(smoothed_energy > THRESHOLD)}
+                try:
+                    requests.post("http://localhost:5000/update", json=payload, timeout=0.5)
+                except Exception:
+                    # Ne pas interrompre la boucle principale si l'API est indisponible
+                    pass
+                last_send = now
+
             # 5. MISE À JOUR EN DIRECT DU GRAPHIQUE
             # Afficher le spectre lissé pour réduire le bruit visuel
             line.set_ydata(smoothed_mag)
             
             # --- LA LIGNE MAGIQUE POUR RECALCULER L'ÉCHELLE Y ---
-            # ax.relim()            # Recalcule les limites des données
-            # ax.autoscale_view()   # Ajuste la vue de l'axe Y automatiquement
+            ax.relim()            # Recalcule les limites des données
+            ax.autoscale_view()   # Ajuste la vue de l'axe Y automatiquement
 
             # Changement dynamique du titre
             if energy > THRESHOLD:
