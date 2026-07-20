@@ -1,5 +1,5 @@
 /* -------------------------------------------------
-   VOLANT COMPLET 
+   VOLANT COMPLET ( version final testé sur les pcb )
 
    Comportement:
    1) Au démarrage / pas de BLE: rien ne s'allume (LEDs OFF)
@@ -117,7 +117,7 @@ const int HALL_MAX = 2027;
 float hallFiltered  = 0.0f;
 float hall2Filtered = 0.0f;
 
-static bool armed = false; // devient true après TTP1+TTP2
+static bool armed = true; // devient true après TTP1+TTP2
 
 /* ===================== Helpers sécurité (verrouillage) ===================== */
 static inline void releaseAllButtons() {
@@ -141,7 +141,7 @@ void setup() {
   Serial.begin(115200);
 
   WiFi.mode(WIFI_OFF);
-  btStop();
+  //btStop();
 
   // I2C
   Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
@@ -152,6 +152,14 @@ void setup() {
   } else {
     Serial.println("MCP23017 OK");
   }
+
+  for (byte addr = 1; addr < 127; addr++) {
+    Wire.beginTransmission(addr);
+    if (Wire.endTransmission() == 0) {
+        Serial.print("I2C : 0x");
+        Serial.println(addr, HEX);
+    }
+}
 
   // Init PWM LEDs
   for (int i = 0; i < LED_COUNT; i++) {
@@ -189,11 +197,16 @@ void loop() {
   if (!bleGamepad.isConnected()) {
     armed = false;
     ledsOffAll();
-    delay(20);
+    delay(10);
     return;
   }
 
   // Déverrouillage TTP223: il faut LES DEUX
+  Serial.print("TTP1 = ");
+  Serial.print(digitalRead(TTP1_PIN));
+
+  Serial.print("  TTP2 = ");
+  Serial.println(digitalRead(TTP2_PIN));
   if (!armed) {
     if (ttpUnlocked()) {
       armed = true;
@@ -205,7 +218,7 @@ void loop() {
       ledsOffAll();
       releaseAllButtons();
       sendNeutralAxes();
-      delay(10);
+      delay(1);
       return;
     }
   }
@@ -217,19 +230,35 @@ void loop() {
 
   /* ===================== BOUTONS MCP + PWM LEDs ===================== */
   // 1 bouton MCP -> 1 LED
-  for (int i = 0; i < LED_COUNT; i++) {
-    bool pressed = (mcp.digitalRead(MCP_BUTTON_PINS[i]) == LOW);
+/* ===================== BOUTONS MCP + PWM LEDs ===================== */
+for (int i = 0; i < LED_COUNT; i++) {
 
-    // BLE boutons 1..9
-    if (pressed) bleGamepad.press(i + 1);
-    else         bleGamepad.release(i + 1);
+    int val = mcp.digitalRead(MCP_BUTTON_PINS[i]);
 
-    // LED associée: FULL si pressée, sinon DIM
+    /* Serial.print("Pin ");
+    Serial.print(i);
+    Serial.print(" = ");
+    Serial.println(val); */
+
+    bool pressed = (val == LOW);
+
+    if (pressed) {
+        Serial.print("Button ");
+        Serial.print(i);
+        Serial.println(" PRESSED");
+        bleGamepad.press(i + 1);
+    }else 
+        bleGamepad.release(i + 1);
+
     ledSet(i, pressed ? PWM_FULL : PWM_DIM);
-  }
+}
+
+ // Pour éviter que le moniteur série défile trop vite
 
   /* ===================== ROLLER 1 ===================== */
   int rollerRaw = analogRead(ROLLER_PIN);
+  Serial.print("Roll1 = ");
+  Serial.println(rollerRaw);
   long rollerMapped;
 
   if (rollerRaw >= ROLLER_MID) {
@@ -244,6 +273,8 @@ void loop() {
   
   /* ===================== ROLLER 2 ===================== */
   int roller2Raw = analogRead(ROLLER2_PIN);
+  Serial.print("Roll2 = ");
+  Serial.println(roller2Raw);
   long roller2Mapped;
 
   if (roller2Raw >= ROLLER_MID) {
