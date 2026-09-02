@@ -26,6 +26,76 @@
       height: 800px;
       background: #fff;
     }
+    /* ===================== BATTERIE ===================== */
+
+    #battery {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      z-index: 1000;
+    }
+
+    .battery-icon {
+      width: 44px;
+      height: 22px;
+
+      border: 2px solid #355d3e;
+
+      border-radius: 4px;
+
+      overflow: hidden;
+
+      background: white;
+    }
+
+    .battery-icon::after {
+      content: "";
+
+      position: absolute;
+
+      right: -5px;
+
+      top: 6px;
+
+      width: 4px;
+
+      height: 8px;
+
+      background: #355d3e;
+    }
+
+    #battery-fill {
+      width: 100%;
+
+      height: 100%;
+
+      background: #2ecc71;
+
+      transition:
+        width 0.5s,
+        background 0.5s;
+    }
+
+    #battery-text {
+      font-size: 18px;
+
+      font-weight: bold;
+
+      color: #355d3e;
+    }
+
+    #battery-charge {
+      display: none;
+
+      color: #f5b700;
+
+      font-size: 18px;
+    }
 
     .fill-meter {
       width: 480px;
@@ -70,6 +140,17 @@
 
   <body class="flex">
     <div class="page">
+      <!-- ================= BATTERIE ================= -->
+
+      <div id="battery">
+        <span id="battery-charge">⚡</span>
+
+        <div class="battery-icon">
+          <div id="battery-fill"></div>
+        </div>
+
+        <span id="battery-text">--%</span>
+      </div>
       <div class="fill-meter"></div>
 
       <button class="button">
@@ -129,5 +210,42 @@
       startFill();
     });
     document.addEventListener("touchend", stopFill);
+    // ================= BATTERIE =================
+
+    async function updateBattery() {
+      try {
+        const response = await fetch("http://127.0.0.1:5000/battery");
+
+        const data = await response.json();
+
+        if (data.status != "ok") return;
+
+        const percent = Math.round(data.percent);
+
+        document.getElementById("battery-text").innerHTML = percent + "%";
+
+        const fill = document.getElementById("battery-fill");
+
+        fill.style.width = percent + "%";
+
+        if (percent > 50) {
+          fill.style.background = "#2ecc71";
+        } else if (percent > 20) {
+          fill.style.background = "#f39c12";
+        } else {
+          fill.style.background = "#e74c3c";
+        }
+
+        document.getElementById("battery-charge").style.display = data.charging
+          ? "inline"
+          : "none";
+      } catch (e) {
+        console.log("Battery API indisponible");
+      }
+    }
+
+    updateBattery();
+
+    setInterval(updateBattery, 1000);
   </script>
 </html>

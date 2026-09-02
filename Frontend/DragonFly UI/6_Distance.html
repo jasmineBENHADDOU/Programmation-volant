@@ -257,34 +257,14 @@
       // Paramètres de mapping énergie → cercles
       // À ajuster après avoir observé les valeurs réelles dans la console
       const ENERGY_MIN = 0;    // énergie = 0 cercles (très loin / silence)
-      const ENERGY_MAX = 8.0;  // énergie = 5 cercles (très proche)
+      const ENERGY_MAX = 200;  // énergie = 5 cercles (très proche)
 
-//////////////////////////////////////////////////////
-// WEBSOCKET — reçoit { energy, detected } du Python
-//////////////////////////////////////////////////////
+      function energyToRings(energy) {
+        const clamped = Math.max(ENERGY_MIN, Math.min(ENERGY_MAX, energy));
+        return Math.round((clamped / ENERGY_MAX) * MAX_RINGS);
+      }
 
-// PALIERS DE CALIBRATION (Modifie ces chiffres pour régler le radar)
-ffunction energyToRings(energy) {
-  if (energy < 0.5) {
-    return 0;  // Sous 0.5 : Pure bruit de fond -> Radar vide
-  } 
-  else if (energy < 2.0) {
-    return 1;  // De 0.5 à 2.0 : Signal capté, objet très éloigné -> 1 cercle
-  } 
-  else if (energy < 5.0) {
-    return 2;  // De 2.0 à 5.0 : L'objet se rapproche -> 2 cercles
-  } 
-  else if (energy < 8.0) {
-    return 3;  // De 5.0 à 8.0 : Distance moyenne -> 3 cercles
-  } 
-  else if (energy < 11.0) {
-    return 4;  // De 8.0 à 11.0 : L'objet est très proche -> 4 cercles
-  } 
-  else {
-    return 5;  // À partir de 11.0 (peaks à 13.91) : Contact maximal -> 5 cercles
-  }
-}
-      const WS_URL = "ws://" + window.location.hostname + ":5000/ws";
+      const WS_URL = "ws://localhost:5000/ws";
       let ws, reconnectTimer;
 
       function connect() {
