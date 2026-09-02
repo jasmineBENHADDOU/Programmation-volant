@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Distance</title>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        position: relative;
+        font-family: sans-serif;
+      }
+
+      body {
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .page {
+        width: 480px;
+        height: 800px;
+        background: #f7f7f7;
+        border: 2px solid #d9d9d9;
+        overflow: hidden;
+      }
+
+      .light-button {
+        position: absolute;
+        background: transparent;
+        width: 203px;
+        height: 203px;
+        top: 56px;
+        left: 137px;
+        border: none;
+        outline: none;
+        background: none;
+        padding: 0;
+        margin: 0;
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+        z-index: 10;
+      }
+      .light-button:focus { outline: none; }
+      .light-button:focus-visible { outline: none; }
+      .light-button img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+      }
+
+      /* ── Radar ─────────────────────────────────────────────── */
+      .radar-container {
+        position: absolute;
+        bottom: 185px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 200px;
+        height: 200px;
+      }
+
+      .radar-container canvas {
+        display: block;
+      }
+
+      /* ── Distance (gardée mais cachée — remplacée par le radar) ─ */
+      .distance-container {
+        position: absolute;
+        bottom: 150px;
+        width: 100%;
+        text-align: center;
+        display: none; /* cachée, le radar prend sa place */
+      }
+
+      .distance {
+        font-family: "Agdasima";
+        font-size: 128px;
+        font-weight: 700;
+        color: #5b6950;
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .meter {
+        font-family: "Agdasima";
+        font-size: 128px;
+        font-weight: 700;
+        color: #5b6950;
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .status {
+        position: absolute;
+        bottom: 100px;
+        width: 100%;
+        text-align: center;
+        color: #355d3e;
+        font-size: 32px;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page">
+
+      <!-- Gyrophare — inchangé -->
+      <button class="light-button" id="lightBtn" aria-label="Phares">
+        <img src="gyrophare.png" alt="phare" />
+      </button>
+
+      <!-- Radar dynamique (remplace la distance simulée) -->
+      <div class="radar-container">
+        <canvas id="radarCanvas" width="200" height="200"></canvas>
+      </div>
+
+      <!-- Distance container gardé pour compatibilité future -->
+      <div class="distance-container">
+        <span class="distance" id="distanceValue">10</span>
+        <span class="meter">m</span>
+      </div>
+
+      <div class="status" id="statusText"></div>
+    </div>
+
+    <script>
+      //////////////////////////////////////////////////////
+      // RADAR — cercles qui disparaissent selon l'énergie
+      //////////////////////////////////////////////////////
+
+      const canvas = document.getElementById("radarCanvas");
+      const ctx    = canvas.getContext("2d");
+      const CX     = 100, CY = 100;  // centre
+      const MAX_RINGS = 5;           // nombre max de cercles
+      const RING_GAP  = 16;          // espace entre cercles (px)
+
+      // sweepAngle tourne en permanence
+      let sweepAngle  = 0;
+      // currentRings : nombre de cercles actifs (1 = très loin, 5 = très proche)
+      let currentRings = 0;
+      // targetRings : valeur cible (mise à jour par le WebSocket)
+      let targetRings  = 0;
+
+      function drawRadar(rings) {
+        ctx.clearRect(0, 0, 200, 200);
+
+        const baseColor = "#5b6950";
+        const dimColor  = "rgba(91,105,80,0.15)";
+
+        // ── Cercles concentriques ──────────────────────────────────
+        for (let i = 1; i <= MAX_RINGS; i++) {
+          const r = i * RING_GAP + 20;
+          const active = i <= rings;
+
+          ctx.beginPath();
+          ctx.arc(CX, CY, r, 0, Math.PI * 2);
+          ctx.strokeStyle = active ? baseColor : dimColor;
+          ctx.lineWidth   = active ? 1.5 : 1;
+          ctx.globalAlpha = active ? (0.3 + i * 0.14) : 0.18;
+          ctx.stroke();
+        }
+
+        // ── Croix ─────────────────────────────────────────────────
+        ctx.globalAlpha = 0.15;
+        ctx.strokeStyle = baseColor;
+        ctx.lineWidth   = 0.8;
+        [[CX, 0, CX, 200], [0, CY, 200, CY]].forEach(([x1,y1,x2,y2]) => {
+          ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+        });
+
+        // ── Sweep (cône qui tourne) ────────────────────────────────
+        ctx.globalAlpha = 1;
+        const maxR = MAX_RINGS * RING_GAP + 20;
+
+        // Gradient du cône
+        const grad = ctx.createConicalGradient
+          ? null   // fallback ci-dessous
+          : null;
+
+        // Cône via arc + fill
+        ctx.save();
+        ctx.translate(CX, CY);
+        ctx.rotate(sweepAngle);
+        const coneAngle = Math.PI / 6;   // 30°
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, maxR, -coneAngle / 2, coneAngle / 2);
+        ctx.closePath();
+
+        const grd = ctx.createRadialGradient(0, 0, 0, 0, 0, maxR);
+        grd.addColorStop(0,   "rgba(91,105,80,0.45)");
+        grd.addColorStop(1,   "rgba(91,105,80,0)");
+        ctx.fillStyle = grd;
+        ctx.fill();
+
+        // Ligne du sweep
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(maxR, 0);
+        ctx.strokeStyle = baseColor;
+        ctx.lineWidth   = 1.5;
+        ctx.globalAlpha = 0.8;
+        ctx.stroke();
+        ctx.restore();
+
+        // ── Point central ─────────────────────────────────────────
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.arc(CX, CY, 3, 0, Math.PI * 2);
+        ctx.fillStyle = baseColor;
+        ctx.fill();
+
+        // ── Point cible (si signal détecté) ───────────────────────
+        if (rings >= 2) {
+          // Position du point varie légèrement selon l'intensité
+          const dotR  = (MAX_RINGS - rings + 1) * RING_GAP + 8;
+          const dotA  = sweepAngle - 0.3;
+          const dotX  = CX + Math.cos(dotA) * dotR;
+          const dotY  = CY + Math.sin(dotA) * dotR;
+          const pulse = 0.6 + 0.4 * Math.sin(Date.now() / 200);
+
+          ctx.beginPath();
+          ctx.arc(dotX, dotY, 4, 0, Math.PI * 2);
+          ctx.fillStyle = baseColor;
+          ctx.globalAlpha = pulse;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      // Boucle d'animation
+      function animate() {
+        sweepAngle += 0.03;   // vitesse de rotation
+
+        // Interpolation douce vers targetRings
+        currentRings += (targetRings - currentRings) * 0.08;
+
+        drawRadar(Math.round(currentRings));
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+
+      //////////////////////////////////////////////////////
+      // WEBSOCKET — reçoit { energy, detected } du Python
+      //////////////////////////////////////////////////////
+
+      // Paramètres de mapping énergie → cercles
+      // À ajuster après avoir observé les valeurs réelles dans la console
+      const ENERGY_MIN = 0;    // énergie = 0 cercles (très loin / silence)
+      const ENERGY_MAX = 8.0;  // énergie = 5 cercles (très proche)
+
+//////////////////////////////////////////////////////
+// WEBSOCKET — reçoit { energy, detected } du Python
+//////////////////////////////////////////////////////
+
+// PALIERS DE CALIBRATION (Modifie ces chiffres pour régler le radar)
+ffunction energyToRings(energy) {
+  if (energy < 0.5) {
+    return 0;  // Sous 0.5 : Pure bruit de fond -> Radar vide
+  } 
+  else if (energy < 2.0) {
+    return 1;  // De 0.5 à 2.0 : Signal capté, objet très éloigné -> 1 cercle
+  } 
+  else if (energy < 5.0) {
+    return 2;  // De 2.0 à 5.0 : L'objet se rapproche -> 2 cercles
+  } 
+  else if (energy < 8.0) {
+    return 3;  // De 5.0 à 8.0 : Distance moyenne -> 3 cercles
+  } 
+  else if (energy < 11.0) {
+    return 4;  // De 8.0 à 11.0 : L'objet est très proche -> 4 cercles
+  } 
+  else {
+    return 5;  // À partir de 11.0 (peaks à 13.91) : Contact maximal -> 5 cercles
+  }
+}
+      const WS_URL = "ws://" + window.location.hostname + ":5000/ws";
+      let ws, reconnectTimer;
+
+      function connect() {
+        ws = new WebSocket(WS_URL);
+
+        ws.onopen = () => {
+          clearTimeout(reconnectTimer);
+          console.log("WS connecté");
+        };
+
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          // data.energy = valeur brute FFT du script Python
+          targetRings = energyToRings(data.energy);
+          console.log("energy=", data.energy, "→ rings=", targetRings);
+        };
+
+        ws.onclose = () => {
+          reconnectTimer = setTimeout(connect, 2000);
+        };
+      }
+
+      connect();
+
+
+      //////////////////////////////////////////////////////
+      // BOUTON PHARES — inchangé
+      //////////////////////////////////////////////////////
+
+      let lightOn = false;
+      const btn        = document.getElementById("lightBtn");
+      const statusText = document.getElementById("statusText");
+
+      btn.addEventListener("click", () => {
+        lightOn = !lightOn;
+        if (lightOn) {
+          statusText.innerText = "Phares ON";
+          console.log("LIGHT_ON");
+          // websocket.send("LIGHT_ON");
+        } else {
+          statusText.innerText = "Phares OFF";
+          console.log("LIGHT_OFF");
+          // websocket.send("LIGHT_OFF");
+        }
+      });
+
+    </script>
+  </body>
+</html>

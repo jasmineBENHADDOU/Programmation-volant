@@ -1,0 +1,14 @@
+[Unit]
+Description=DragonFly Power Server
+After=network.target
+
+[Service]
+Type=simple
+User=yasmine
+WorkingDirectory=/home/yasmine/Desktop
+ExecStart=/home/yasmine/Desktop/venv/bin/python /home/yasmine/Desktop/power-server.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

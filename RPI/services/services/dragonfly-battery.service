@@ -1,0 +1,21 @@
+[Unit]
+Description=DragonFly Battery Flask API
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=yasmine
+Group=yasmine
+
+WorkingDirectory=/home/yasmine/Desktop/test-autonomie
+
+ExecStart=/home/yasmine/Desktop/test-autonomie/venv/bin/python /home/yasmine/Desktop/test-autonomie/api-server.py
+
+Restart=always
+RestartSec=3
+
+
+
+[Install]
+WantedBy=multi-user.target
